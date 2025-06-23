@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 823483932, guid: 5e2b4f19fefec46a08626f272dff56e8, type: 3}
+  m_Name: MultiSetConfig
+  m_EditorClassIdentifier: 
+  clientId: 102ffb29-a19e-4727-acd4-0ef280bb6fdf
+  clientSecret: 42ab43f229a2a06093e9836531611e456dd751923cec0ced2bd4136c482c0bf4

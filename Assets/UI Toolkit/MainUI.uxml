@@ -1,0 +1,110 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Hidden.uss?fileID=7433441132597879392&amp;guid=a3550795fec2bad43b9995a71ee285c3&amp;type=3#Hidden" />
+    <ui:VisualElement name="Heading" style="flex-grow: initial; flex-shrink: initial; -unity-background-image-tint-color: rgb(245, 57, 57); width: 100%; height: 14%; background-color: rgb(3, 1, 57); flex-direction: row; align-items: center; justify-content: center; align-self: center;">
+        <ui:Label text="Office Navigator" name="MallNavigator" style="align-items: center; justify-content: center; white-space: nowrap; -unity-text-align: lower-center; color: rgb(255, 255, 255); font-size: 86px; -unity-font-style: bold; bottom: -28%; top: 7%; left: auto; width: 839px; align-self: center; align-content: center;" />
+    </ui:VisualElement>
+    <ui:VisualElement name="BodyFirst" class="hidden" style="flex-grow: 1; justify-content: flex-start; align-items: center; background-color: rgb(255, 255, 255);">
+        <ui:Label text="Save Your Parking Spot" name="Message1" style="-unity-text-align: middle-center; font-size: 54px; color: rgb(3, 1, 57); -unity-font-style: bold; height: 11%;" />
+        <ui:Label text="Scan the QR code at your parking spot to save its location" name="Message1" style="-unity-text-align: middle-center; font-size: 43px; flex-wrap: nowrap; white-space: pre-wrap; right: auto; left: auto; align-self: center; align-content: center; align-items: center; width: 993px; height: 143px;" />
+        <ui:VisualElement name="Car" style="flex-grow: initial; width: 100%; justify-content: center; align-self: center; background-image: url(&apos;project://database/Assets/Images/car.png?fileID=2800000&amp;guid=3d666948da373ec439f5d7816fb07db6&amp;type=3#car&apos;); background-size: 30% 60%; height: 30%; align-items: center; align-content: center; flex-shrink: initial; background-color: rgba(0, 0, 0, 0); position: relative; top: auto;" />
+        <ui:Button name="saveButton" style="font-size: 61px; -unity-background-image-tint-color: rgb(55, 55, 55); background-color: rgb(0, 132, 255); width: 69%; height: 7%; flex-direction: row; justify-content: center; border-bottom-left-radius: 25px; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; -unity-hover-background-color: rgb(21, 58, 199);">
+            <ui:VisualElement style="flex-grow: initial; background-image: url(&apos;project://database/Assets/Images/qr-code.png?fileID=2800000&amp;guid=e90a959a7f6b7824c8b1028839385e2d&amp;type=3#qr-code&apos;); background-size: 100% 100%; width: 10%; height: 70%; right: 0%; left: -3%; align-items: center; align-self: center; align-content: center; justify-content: center; min-width: 2%; min-height: 10%; flex-shrink: initial;" />
+            <ui:Label text="Scan parking QR Code" style="font-size: 36px; color: rgb(255, 255, 255); right: -5%; left: auto;" />
+        </ui:Button>
+    </ui:VisualElement>
+    <ui:VisualElement name="BodySecond" class="hidden" style="flex-grow: 1; background-color: rgba(3, 1, 57, 0); -unity-background-image-tint-color: rgba(255, 255, 255, 0);">
+        <ui:Label text="Scan Parking QR Code" style="-unity-text-align: middle-center; font-size: 50px; color: rgb(255, 255, 255); -unity-font-style: bold;" />
+        <ui:Label text="Point your camera at the QR code near you" style="-unity-text-align: middle-center; font-size: 29px; color: rgba(255, 255, 255, 0.8); -unity-font-style: bold; white-space: pre-wrap;" />
+        <ui:VisualElement style="flex-grow: initial; background-image: url(&apos;project://database/Assets/Images/scanning.png?fileID=2800000&amp;guid=24926995ce9476449a33b61f836c116a&amp;type=3#scanning&apos;); -unity-text-align: middle-center; flex-shrink: initial; height: 50%; width: 80%; align-content: center; align-self: center; align-items: center; bottom: 0%; background-size: 100% 100%;" />
+        <ui:Label text="Scanning..." style="-unity-text-align: upper-center; font-size: 44px; color: rgb(255, 255, 255);" />
+    </ui:VisualElement>
+    <ui:VisualElement name="BodyThird" style="flex-grow: 1; background-color: rgba(3, 1, 57, 0); -unity-background-image-tint-color: rgba(255, 255, 255, 0);">
+        <ui:VisualElement name="content-area" class="content-area-style">
+            <ui:Label text="Explore the office" name="page-subtitle" class="page-subtitle-style" />
+            <ui:VisualElement name="search-bar-container" class="search-bar-container-style">
+                <ui:VisualElement name="search-icon" class="search-icon-style" />
+                <ui:TextField name="search-field" placeholder="Search shops, dining, services..." class="search-field-style" />
+            </ui:VisualElement>
+            <ui:VisualElement name="tabs-container" class="tabs-container-style">
+                <ui:Button name="shops-tab" text="Shops" class="tab-button active-tab">
+                    <ui:VisualElement name="shops-tab-icon" class="tab-icon shops-icon" />
+                </ui:Button>
+                <ui:Button name="dining-tab" text="Dining" class="tab-button">
+                    <ui:VisualElement name="dining-tab-icon" class="tab-icon dining-icon" />
+                </ui:Button>
+                <ui:Button name="services-tab" text="Services" class="tab-button">
+                    <ui:VisualElement name="services-tab-icon" class="tab-icon services-icon" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:ScrollView name="items-scroll-view" mode="Vertical" class="items-scroll-view-style">
+                <ui:VisualElement name="list-item-1" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-1" class="list-item-icon" />
+                    <ui:Label text="Zara" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-1" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-2" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-2" class="list-item-icon" />
+                    <ui:Label text="H&amp;M" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-2" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-3" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-3" class="list-item-icon" />
+                    <ui:Label text="McDonald&apos;s" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-3" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-4" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-4" class="list-item-icon" />
+                    <ui:Label text="Starbucks" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-4" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-5" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-5" class="list-item-icon" />
+                    <ui:Label text="Uniqlo" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-5" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-6" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-6" class="list-item-icon" />
+                    <ui:Label text="7-Eleven" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-6" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-7" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-7" class="list-item-icon" />
+                    <ui:Label text="Mannings" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-7" class="list-item-location-pin" />
+                </ui:VisualElement>
+                <ui:VisualElement name="list-item-8" class="list-item-style">
+                    <ui:VisualElement name="item-category-icon-8" class="list-item-icon" />
+                    <ui:Label text="Maxim&apos;s Cakes" class="list-item-label" />
+                    <ui:VisualElement name="item-location-pin-8" class="list-item-location-pin" />
+                </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement name="bottom-nav" class="bottom-nav-style">
+            <ui:Button name="my-location-button" class="bottom-button location-button">
+                <ui:VisualElement name="my-location-icon" class="button-icon my-location-button-icon" />
+                <ui:Label text="My Location" class="bottom-button-label" />
+            </ui:Button>
+            <ui:Button name="my-car-button" class="bottom-button car-button">
+                <ui:VisualElement name="my-car-icon" class="button-icon my-car-button-icon" />
+                <ui:Label text="My Car" class="bottom-button-label" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="BodyFourth" class="body-fourth-container hidden">
+        <ui:Label text="Navigate To..." name="navigate-title" class="navigate-title-style" />
+        <ui:Label text="Ready to head back to your car?" name="navigate-subtitle" class="navigate-subtitle-style" />
+        <ui:VisualElement name="parking-info-box" class="parking-info-box-style">
+            <ui:VisualElement name="parking-car-icon" class="parking-info-icon-style" style="background-image: url(&apos;project://database/Assets/Images/car.png?fileID=2800000&amp;guid=3d666948da373ec439f5d7816fb07db6&amp;type=3#car&apos;);" />
+            <ui:Label text="Your car is parked at:" class="parking-info-text-style parking-info-text-main" />
+            <ui:Label text="Level P2, Zone B" name="parking-location-text" class="parking-info-location-style" />
+            <ui:Label text="Saved 45 minutes ago" name="parking-time-text" class="parking-info-time-style" />
+        </ui:VisualElement>
+        <ui:Button name="go-to-car-button" text="Go to My Car" class="go-to-car-button-style">
+            <ui:VisualElement name="go-to-car-icon" class="go-to-car-button-icon-style" />
+        </ui:Button>
+        <ui:Button name="back-to-map-button" text="Back to Mall Map" class="back-to-map-button-style" />
+    </ui:VisualElement>
+    <ui:VisualElement name="PopUpMsg" class="pop-up-msg-style" style="bottom: 36px; right: 50px; width: 422px; height: 122px;">
+        <ui:Label text="Location Saved" class="pop-up-label-style" style="font-size: 30px;" />
+    </ui:VisualElement>
+</ui:UXML>
