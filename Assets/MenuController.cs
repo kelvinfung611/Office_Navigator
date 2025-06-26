@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MenuController : MonoBehaviour
 {
@@ -22,6 +23,23 @@ public class MenuController : MonoBehaviour
     // Buttons for navigation
     private Button getStartedButton;
     private Button goBackButtonScan;
+
+    // Mapping between destination list items and POI names
+    private Dictionary<int, string> destinationToPOIMapping = new Dictionary<int, string>()
+    {
+        {1, "CEO"}, // list-item-1 -> CEO POI
+        {2, "CIO"}, // list-item-2 -> CTO POI
+        {3, "CFO"}, // list-item-3 -> CFO POI
+        {4, "COO"}, // list-item-4 -> COO POI
+        {5, "Toilet 6/F"}, // list-item-5 -> Toilet POI
+        {6, "Meeting room 3"}, // list-item-6 -> Meeting room 3 POI
+        {7, "Meeting room 4"}, // list-item-7 -> Meeting room 4 POI
+        {8, "Meeting room 2"}, // list-item-8 -> Meeting room 2 POI
+        {9, "Training room"}, // list-item-9 -> Training room POI
+        {10, "PnC room"}, // list-item-10 -> PnC room POI
+        {11, "Printing room"}, // list-item-11 -> Printing room POI
+        {12, "IT"} // list-item-12 -> Michael IT POI
+    };
 
     private void Awake()
     {
@@ -79,13 +97,30 @@ public class MenuController : MonoBehaviour
         if (getStartedButton != null) getStartedButton.RegisterCallback<ClickEvent>(OnGetStartedClicked);
         if (goBackButtonScan != null) goBackButtonScan.RegisterCallback<ClickEvent>(OnGoBackClicked);
 
-        // Register clicks for all destination list items
-        for (int i = 1; i <= 13; i++)
+        // Register clicks for all destination list items (dynamically detect available items)
+        for (int i = 1; i <= 20; i++) // Check up to 20 items to be safe
         {
             var listItem = ui.Q<VisualElement>($"list-item-{i}");
             if (listItem != null)
             {
+                // Register click for the entire card
                 listItem.RegisterCallback<ClickEvent>(OnDestinationItemSelected);
+                
+                // Also register click specifically for the GO button
+                var goButton = listItem.Q<Button>();
+                if (goButton != null)
+                {
+                    // Capture the current value of i in a local variable to avoid closure issues
+                    int currentIndex = i;
+                    goButton.RegisterCallback<ClickEvent>(evt => OnDestinationGoButtonClicked(evt, currentIndex));
+                }
+                Debug.Log($"Registered click events for list-item-{i}");
+            }
+            else
+            {
+                // Stop when we can't find more items
+                Debug.Log($"Found {i-1} destination items in UI");
+                break;
             }
         }
     }
@@ -95,12 +130,18 @@ public class MenuController : MonoBehaviour
         if (getStartedButton != null) getStartedButton.UnregisterCallback<ClickEvent>(OnGetStartedClicked);
         if (goBackButtonScan != null) goBackButtonScan.UnregisterCallback<ClickEvent>(OnGoBackClicked);
 
-        for (int i = 1; i <= 13; i++)
+        // Unregister clicks for all destination list items (dynamically detect available items)
+        for (int i = 1; i <= 20; i++) // Check up to 20 items to be safe
         {
             var listItem = ui.Q<VisualElement>($"list-item-{i}");
             if (listItem != null)
             {
                 listItem.UnregisterCallback<ClickEvent>(OnDestinationItemSelected);
+            }
+            else
+            {
+                // Stop when we can't find more items
+                break;
             }
         }
         
@@ -128,6 +169,85 @@ public class MenuController : MonoBehaviour
     {
         Debug.Log("Destination item clicked! Transitioning to Get Ready page.");
         ShowPage(getReadyPage);
+    }
+
+    private void OnDestinationGoButtonClicked(ClickEvent evt, int destinationIndex)
+    {
+        evt.StopPropagation(); // Prevent the card click event from firing
+        
+        Debug.Log($"GO button clicked for destination {destinationIndex}!");
+        
+        // Get the POI name from mapping
+        if (destinationToPOIMapping.TryGetValue(destinationIndex, out string poiName))
+        {
+            // Find the POI in the augmented space
+            POI targetPOI = FindPOIByName(poiName);
+            Debug.Log($"Looking for POI: {poiName}");
+            if (targetPOI != null)
+            {
+                Debug.Log($"Starting navigation to {poiName}");
+                // Start navigation directly using NavigationController
+                if (NavigationController.instance != null)
+                {
+                    NavigationController.instance.SetPOIForNavigation(targetPOI);
+
+                    // Hide main UI and show navigation UI
+                    if (navigationUIControllerObject != null)
+                    {
+                        ui.style.display = DisplayStyle.None;
+                        navigationUIControllerObject.SetActive(true);
+                    }
+                    else
+                    {
+                        Debug.LogError("NavigationUIController not assigned!");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("NavigationController instance not found!");
+                }
+            }
+            else
+            {
+                Debug.LogError($"POI '{poiName}' not found in the scene!");
+                // Show user-friendly error message
+                StartCoroutine(ShowPopUpMessageCoroutine($"Destination '{poiName}' is currently unavailable", 3f));
+            }
+        }
+        else
+        {
+            Debug.LogError($"No POI mapping found for destination index {destinationIndex}");
+            // Show user feedback for invalid destination
+            StartCoroutine(ShowPopUpMessageCoroutine("This destination is not available", 3f));
+        }
+    }
+
+    private POI FindPOIByName(string poiName)
+    {
+        // First try to find through NavigationController's augmented space
+        if (NavigationController.instance?.augmentedSpace != null)
+        {
+            var pois = NavigationController.instance.augmentedSpace.GetComponentsInChildren<POI>();
+            foreach (var poi in pois)
+            {
+                if (poi.poiName.Equals(poiName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return poi;
+                }
+            }
+        }
+        
+        // Fallback: search all POIs in the scene
+        var allPOIs = FindObjectsByType<POI>(FindObjectsSortMode.None);
+        foreach (var poi in allPOIs)
+        {
+            if (poi.poiName.Equals(poiName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return poi;
+            }
+        }
+        
+        return null;
     }    private void OnGetStartedClicked(ClickEvent evt)
     {
         Debug.Log("Get Started button clicked! Transitioning to QR Scan page.");
@@ -208,7 +328,22 @@ public class MenuController : MonoBehaviour
     private void OnGoBackClicked(ClickEvent evt)
     {
         Debug.Log("Go Back button clicked! Returning to destination list.");
+        // Stop any running animations
+        StopAllCoroutines();
         ShowPage(bodyThird);
+    }
+
+    public void ReturnToMainMenu()
+    {
+        // Public method that can be called by the navigation controller
+        // when navigation is complete or cancelled
+        Debug.Log("Returning to main menu from navigation...");
+        if (navigationUIControllerObject != null)
+        {
+            navigationUIControllerObject.SetActive(false);
+        }
+        ui.style.display = DisplayStyle.Flex;
+        ShowPage(bodyThird); // Return to destination list
     }
 
     private IEnumerator SimulateQRScanAndNavigate()
@@ -216,12 +351,37 @@ public class MenuController : MonoBehaviour
         Debug.Log("Simulating QR code scan for navigation...");
         yield return new WaitForSeconds(3f); 
         Debug.Log("Scan complete. Starting navigation.");
-        // Here you would typically transition to the actual AR navigation view
-        // For now, we can just log it or go back to the main menu as an example
+        
+        // Stop the scanner animation first
+        StopAllCoroutines();
+        
+        // Check if navigationUIControllerObject is properly assigned
         if (navigationUIControllerObject != null)
         {
-            ui.style.display = DisplayStyle.None; // Hide the main menu
-            navigationUIControllerObject.SetActive(true); // Show the navigation UI
+            Debug.Log("Activating navigation UI controller...");
+            try
+            {
+                ui.style.display = DisplayStyle.None; // Hide the main menu
+                navigationUIControllerObject.SetActive(true); // Show the navigation UI
+                Debug.Log("Navigation UI activated successfully.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error activating navigation UI: {e.Message}");
+                // Fallback: stay on scanning page or show error
+                ShowPage(bodySecond);
+            }
+        }
+        else
+        {
+            Debug.LogError("NavigationUIController GameObject is not assigned! Cannot start navigation.");
+            // Fallback: show a message and stay on scanning page
+            if (popUpMsg != null && popUpMsgLabel != null)
+            {
+                StartCoroutine(ShowPopUpMessageCoroutine("Navigation system not available", 2f));
+            }
+            // Keep the scanning page active instead of going back to destination list
+            ShowPage(bodySecond);
         }
     }
 

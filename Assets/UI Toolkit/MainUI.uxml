@@ -28,7 +28,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="list-item-2" class="destination-card">
                     <ui:VisualElement class="destination-card-icon" style="background-color: rgb(26, 192, 215);" />
-                    <ui:Label text="CTO" class="destination-card-label" />
+                    <ui:Label text="CIO" class="destination-card-label" />
                     <ui:Button text="GO" class="destination-card-button" />
                 </ui:VisualElement>
                 <ui:VisualElement name="list-item-3" class="destination-card">
@@ -78,12 +78,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="list-item-12" class="destination-card">
                     <ui:VisualElement class="destination-card-icon" style="background-color: rgb(26, 192, 215);" />
-                    <ui:Label text="Michael IT" class="destination-card-label" />
-                    <ui:Button text="GO" class="destination-card-button" />
-                </ui:VisualElement>
-                <ui:VisualElement name="list-item-13" class="destination-card">
-                    <ui:VisualElement class="destination-card-icon" style="background-color: rgb(26, 192, 215);" />
-                    <ui:Label text="Kelvin IT" class="destination-card-label" />
+                    <ui:Label text="IT" class="destination-card-label" />
                     <ui:Button text="GO" class="destination-card-button" />
                 </ui:VisualElement>
             </ui:ScrollView>

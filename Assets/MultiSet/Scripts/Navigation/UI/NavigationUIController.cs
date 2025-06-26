@@ -9,6 +9,14 @@ public class NavigationUIController : MonoBehaviour
 {
     public static NavigationUIController instance;
 
+    private MapLocalizationManager mapLocalizationManager;
+
+    [SerializeField]
+    public GameObject navigationUI;
+
+    [SerializeField]
+    public GameObject CaptureButton;
+
     [Tooltip("Label to show remaining distance")]
     public TextMeshProUGUI remainingDistance;
 
@@ -37,10 +45,41 @@ public class NavigationUIController : MonoBehaviour
 
     void Start()
     {
+        CaptureButton.SetActive(true);
+        navigationUI.SetActive(true);
         ShowNavigationUIElements(false);
         DestinationSelectUI.SetActive(false);
 
         destinationName.text = "";
+        mapLocalizationManager = FindFirstObjectByType<MapLocalizationManager>();
+        if (mapLocalizationManager == null)
+        {
+            Debug.LogError("MapLocalizationManager not found in the scene. Ensure it is present. Cannot start localization.");
+            return; // Exit if critical component is missing
+        }
+                Debug.Log("NavigationUIController active. Requesting AR Localization to start.");
+        if (NavigationController.instance != null) // Check if NavigationController is ready
+        {
+            if(!string.IsNullOrEmpty(mapLocalizationManager?.mapOrMapsetCode))
+            {
+                mapLocalizationManager.LocalizeFrame();
+                Debug.Log("AR localization process initiated by NavigationUIController.");
+                // You might want to show some "Localizing..." UI here.
+                // The DestinationSelectUI should typically only be shown after successful localization
+                // and if the user needs to select a destination. For "Go to My Car",
+                // the destination is already known, so you might directly proceed to navigation setup
+                // once localization is confirmed.
+            }
+            else
+            {
+                Debug.LogError("Map or Mapset code is not set in MapLocalizationManager. Cannot start AR localization.");
+            }
+        }
+        else
+        {
+            Debug.LogError("NavigationController instance is not available. Cannot explicitly start AR localization from UI.");
+        }
+        // --- END OF AR LOCALIZATION TRIGGER ---
     }
 
     void Update()
