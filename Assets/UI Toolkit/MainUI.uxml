@@ -98,4 +98,7 @@
     <ui:VisualElement name="PopUpMsg" class="pop-up-msg-style" style="bottom: 36px; right: 50px; width: 422px; height: 122px;">
         <ui:Label text="Location Saved" class="pop-up-label-style" style="font-size: 30px;" />
     </ui:VisualElement>
+    <ui:VisualElement name="LocalizationPrompt" class="hidden localization-prompt-container">
+        <ui:Label text="Get ready to scan your surroundings" class="localization-prompt-label" />
+    </ui:VisualElement>
 </ui:UXML>

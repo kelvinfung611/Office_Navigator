@@ -16,8 +16,11 @@ public class MenuController : MonoBehaviour
 
     private VisualElement bodySecond;
     private VisualElement bodyThird;
-    private VisualElement getReadyPage;    private VisualElement popUpMsg; // Reference to the PopUpMsg element
+    private VisualElement getReadyPage;
+    private VisualElement popUpMsg; // Reference to the PopUpMsg element
+    private VisualElement localizationPrompt; // The new prompt element
     private Label popUpMsgLabel; // Reference to the Label inside PopUpMsg
+    private Label localizationPromptLabel; // Add this field
     private VisualElement scannerLine;
     private VisualElement scannerGlow;
     private VisualElement scannerTrail1;
@@ -55,6 +58,8 @@ public class MenuController : MonoBehaviour
         bodySecond = ui.Q<VisualElement>("BodySecond");
         bodyThird = ui.Q<VisualElement>("BodyThird");        getReadyPage = ui.Q<VisualElement>("GetReadyPage");
         popUpMsg = ui.Q<VisualElement>("PopUpMsg");
+        localizationPrompt = ui.Q<VisualElement>("LocalizationPrompt"); // Query the new element
+        localizationPromptLabel = localizationPrompt?.Q<Label>(); // Get the label for animation
         scannerLine = ui.Q<VisualElement>("scanner-line");
         scannerGlow = ui.Q<VisualElement>("scanner-glow");
         scannerTrail1 = ui.Q<VisualElement>("scanner-trail-1");
@@ -65,6 +70,7 @@ public class MenuController : MonoBehaviour
         if (bodySecond == null) Debug.LogError("BodySecond element not found. Check UXML name.");
         if (bodyThird == null) Debug.LogError("BodyThird element not found. Check UXML name.");
         if (getReadyPage == null) Debug.LogError("GetReadyPage element not found. Check UXML name.");        if (popUpMsg == null) Debug.LogError("PopUpMsg element not found. Check UXML name.");
+        if (localizationPrompt == null) Debug.LogError("LocalizationPrompt element not found. Check UXML name.");
         if (scannerLine == null) Debug.LogError("scanner-line element not found. Check UXML name.");
         if (scannerGlow == null) Debug.LogError("scanner-glow element not found. Check UXML name.");
         if (scannerTrail1 == null) Debug.LogError("scanner-trail-1 element not found. Check UXML name.");
@@ -97,6 +103,7 @@ public class MenuController : MonoBehaviour
     {
         ShowPage(bodyThird); // Start with the destination list
         if(popUpMsg != null) popUpMsg.RemoveFromClassList("visible");
+        if(localizationPrompt != null) localizationPrompt.AddToClassList("hidden"); // Hide prompt on start
     }
 
     private void OnEnable()
@@ -160,6 +167,13 @@ public class MenuController : MonoBehaviour
         if (bodySecond != null) bodySecond.AddToClassList("hidden");
         if (bodyThird != null) bodyThird.AddToClassList("hidden");
         if (getReadyPage != null) getReadyPage.AddToClassList("hidden");
+        
+        // Also hide the localization prompt when switching pages
+        if (localizationPrompt != null) 
+        {
+            localizationPrompt.AddToClassList("hidden");
+            localizationPrompt.RemoveFromClassList("visible");
+        }
 
         if (scannerLine != null) 
         {
@@ -241,15 +255,121 @@ public class MenuController : MonoBehaviour
         return null;
     }    private void OnGetStartedClicked(ClickEvent evt)
     {
-        Debug.Log("Get Started button clicked! Transitioning to QR Scan page.");
+        Debug.Log("Get Started button clicked! Starting QR Scan and Localization flow.");
+        // Stop any previously running pop-up messages to avoid overlap
+        StopAllCoroutines();
+        // This single coroutine will now handle the entire sequence from scanning to navigation
+        StartCoroutine(ScanAndLocalizeCoroutine());
+    }
+
+    private IEnumerator ScanAndLocalizeCoroutine()
+    {
+        // 1. Show QR Scanner Page and start animation
+        Debug.Log("Transitioning to QR Scan page.");
         ShowPage(bodySecond);
-        if (scannerLine != null) 
+        Coroutine scannerAnimation = StartCoroutine(AnimateScanner()); // Store reference
+
+        // 2. Simulate QR code scan
+        Debug.Log("Simulating QR code scan for navigation...");
+        yield return new WaitForSeconds(5f);
+        Debug.Log("Scan complete.");
+
+        // 3. Stop scanner animation and hide the page
+        if (scannerAnimation != null) StopCoroutine(scannerAnimation); // Stop only the scanner animation
+        if (bodySecond != null) bodySecond.AddToClassList("hidden");
+
+        // 4. Show Localization Prompt
+        if (localizationPrompt != null)
         {
-            StartCoroutine(AnimateScanner());
+            Debug.Log("Showing localization prompt.");
+            localizationPrompt.RemoveFromClassList("hidden");
+            localizationPrompt.AddToClassList("visible"); // This triggers the fade-in
+
+            // Start C# pulse animation
+            Coroutine pulseRoutine = null;
+            if (localizationPromptLabel != null)
+                pulseRoutine = StartCoroutine(PulsePromptLabel(localizationPromptLabel));
+
+            // 5. Wait for user to read the prompt (and for animation to play)
+            Debug.Log("Waiting 3 seconds for prompt display...");
+            yield return new WaitForSeconds(3f);
+
+            // 6. Hide Localization Prompt
+            Debug.Log("Hiding localization prompt.");
+            localizationPrompt.RemoveFromClassList("visible"); // This triggers the fade-out
+
+            // Wait for the fade-out transition to complete (1s duration is set in USS)
+            Debug.Log("Waiting for fade-out transition...");
+            yield return new WaitForSeconds(1f);
+
+            // Stop pulse animation and reset scale
+            if (pulseRoutine != null) 
+            {
+                StopCoroutine(pulseRoutine);
+                Debug.Log("Stopped pulse animation.");
+            }
+            if (localizationPromptLabel != null)
+                localizationPromptLabel.transform.scale = Vector3.one;
+
+            localizationPrompt.AddToClassList("hidden");
+            Debug.Log("Localization prompt fully hidden.");
         }
-        // Start the scan simulation and navigation with the selected POI
-        StartCoroutine(SimulateQRScanAndNavigate());
-    }    private IEnumerator AnimateScanner()
+        else
+        {
+            Debug.LogError("LocalizationPrompt is null. Skipping prompt.");
+        }
+
+        // 7. Proceed with Navigation Setup
+        Debug.Log("Proceeding with navigation setup.");
+        if (selectedPOI != null && NavigationController.instance != null)
+        {
+            Debug.Log($"Starting navigation to {selectedPOI.poiName}");
+
+            if (navigationUIControllerObject != null)
+            {
+                try
+                {
+                    NavigationUIController navUIController = navigationUIControllerObject.GetComponent<NavigationUIController>();
+                    if (navUIController != null)
+                    {
+                        Debug.Log("NavigationUIController component found, setting up shared navigation flags...");
+                        shouldStartNavigationOnInit = true;
+                        navigationPOI = selectedPOI;
+                        navigationUIControllerObject.SetActive(true);
+                        ui.style.display = DisplayStyle.None; // Hide main menu
+                        Debug.Log($"Navigation flags set for {selectedPOI.poiName}.");
+                    }
+                    else
+                    {
+                        Debug.LogError("NavigationUIController component not found on the assigned GameObject!");
+                        NavigationController.instance.SetPOIForNavigation(selectedPOI);
+                        navigationUIControllerObject.SetActive(true);
+                        ui.style.display = DisplayStyle.None;
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Error activating navigation UI: {e.Message}");
+                    StartCoroutine(ShowPopUpMessageCoroutine("Error starting navigation.", 3f));
+                    ReturnToMainMenu();
+                }
+            }
+            else
+            {
+                Debug.LogError("NavigationUIController GameObject is not assigned! Cannot start navigation.");
+                StartCoroutine(ShowPopUpMessageCoroutine("Navigation system not available.", 3f));
+                ReturnToMainMenu();
+            }
+        }
+        else
+        {
+            Debug.LogError("No POI selected or NavigationController not found!");
+            StartCoroutine(ShowPopUpMessageCoroutine("Could not start navigation. Destination not found.", 3f));
+            ReturnToMainMenu();
+        }
+    }
+
+    private IEnumerator AnimateScanner()
     {
         while (bodySecond != null && !bodySecond.ClassListContains("hidden"))
         {
@@ -438,5 +558,20 @@ public class MenuController : MonoBehaviour
         shouldStartNavigationOnInit = false;
         navigationPOI = null;
         Debug.Log("Navigation flags cleared");
+    }
+
+    // Pulse animation for the prompt label
+    private IEnumerator PulsePromptLabel(Label label)
+    {
+        float duration = 2f;
+        float timer = 0f;
+        while (true)
+        {
+            timer += Time.deltaTime;
+            float t = (Mathf.Sin(timer * Mathf.PI / duration) + 1f) / 2f; // t goes 0->1->0 over duration
+            float scale = Mathf.Lerp(1f, 1.05f, t);
+            label.transform.scale = new Vector3(scale, scale, 1f);
+            yield return null;
+        }
     }
 }
