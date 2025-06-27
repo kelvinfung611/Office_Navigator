@@ -38,7 +38,7 @@ public class MenuController : MonoBehaviour
         {2, "CIO"}, // list-item-2 -> CTO POI
         {3, "CFO"}, // list-item-3 -> CFO POI
         {4, "COO"}, // list-item-4 -> COO POI
-        {5, "Toilet 6/F"}, // list-item-5 -> Toilet POI
+        {5, "Toliet 6/F"}, // list-item-5 -> Toilet POI
         {6, "Meeting room 3"}, // list-item-6 -> Meeting room 3 POI
         {7, "Meeting room 4"}, // list-item-7 -> Meeting room 4 POI
         {8, "Meeting room 2"}, // list-item-8 -> Meeting room 2 POI
@@ -341,7 +341,7 @@ public class MenuController : MonoBehaviour
     private IEnumerator SimulateQRScanAndNavigate()
     {
         Debug.Log("Simulating QR code scan for navigation...");
-        yield return new WaitForSeconds(3f); 
+        yield return new WaitForSeconds(5f); 
         Debug.Log("Scan complete. Starting navigation.");
         
         // Stop the scanner animation first

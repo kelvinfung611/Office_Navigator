@@ -13,8 +13,11 @@ public class POICollider : MonoBehaviour
     // Detect if user (respectively ARCamera) hits collider of POI.
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.name == "ARCamera")
+        if (other.gameObject.name == "ARCamera" &&
+            NavigationController.instance != null &&
+            poi == NavigationController.instance.currentDestination)
         {
+
             Debug.Log("User visited " + poi.poiName);
             poi.Arrived();
         }
@@ -23,7 +26,9 @@ public class POICollider : MonoBehaviour
     // Detect if user (respectively ARCamera) left collider of POI.
     void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.name == "ARCamera")
+        if (other.gameObject.name == "ARCamera" &&
+            NavigationController.instance != null &&
+            poi == NavigationController.instance.currentDestination)
         {
             Debug.Log("User left " + poi.poiName);
         }
