@@ -82,6 +82,26 @@ public class NavigationUIController : MonoBehaviour
         // --- END OF AR LOCALIZATION TRIGGER ---
 
         // Check if MenuController has set navigation flags for immediate start
+        // if (MenuController.shouldStartNavigationOnInit && MenuController.navigationPOI != null)
+        // {
+        //     Debug.Log($"NavigationUIController detected navigation flags, starting navigation to {MenuController.navigationPOI.poiName}");
+            
+        //     // Start navigation using the stored POI
+        //     ClickedStartNavigation(MenuController.navigationPOI);
+            
+        //     // Clear the flags
+        //     MenuController.ClearNavigationFlags();
+        // }
+    }
+
+    void Update()
+    {
+        HandleNavigationState();
+        UpdateRemainingDistance();
+    }
+
+    public void FirstLocalizationComplete()
+    {
         if (MenuController.shouldStartNavigationOnInit && MenuController.navigationPOI != null)
         {
             Debug.Log($"NavigationUIController detected navigation flags, starting navigation to {MenuController.navigationPOI.poiName}");
@@ -92,12 +112,6 @@ public class NavigationUIController : MonoBehaviour
             // Clear the flags
             MenuController.ClearNavigationFlags();
         }
-    }
-
-    void Update()
-    {
-        HandleNavigationState();
-        UpdateRemainingDistance();
     }
 
     // handles the 
@@ -154,7 +168,7 @@ public class NavigationUIController : MonoBehaviour
     }
 
     // toggle visibility of navigation UI elements
-    void ShowNavigationUIElements(bool isVisible)
+    public void ShowNavigationUIElements(bool isVisible)
     {
         // for navigation
         navigationProgressSlider.SetActive(isVisible);
