@@ -80,6 +80,18 @@ public class NavigationUIController : MonoBehaviour
             Debug.LogError("NavigationController instance is not available. Cannot explicitly start AR localization from UI.");
         }
         // --- END OF AR LOCALIZATION TRIGGER ---
+
+        // Check if MenuController has set navigation flags for immediate start
+        if (MenuController.shouldStartNavigationOnInit && MenuController.navigationPOI != null)
+        {
+            Debug.Log($"NavigationUIController detected navigation flags, starting navigation to {MenuController.navigationPOI.poiName}");
+            
+            // Start navigation using the stored POI
+            ClickedStartNavigation(MenuController.navigationPOI);
+            
+            // Clear the flags
+            MenuController.ClearNavigationFlags();
+        }
     }
 
     void Update()
@@ -129,7 +141,7 @@ public class NavigationUIController : MonoBehaviour
     public void ClickedStartNavigation(POI poi)
     {
         NavigationController.instance.SetPOIForNavigation(poi);
-        ToggleDestinationSelectUI();
+        //ToggleDestinationSelectUI();
 
         ShowNavigationUIElements(true);
     }

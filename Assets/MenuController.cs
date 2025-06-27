@@ -10,6 +10,10 @@ public class MenuController : MonoBehaviour
     [Header("External Controllers")]
     public GameObject navigationUIControllerObject;
 
+    // Shared navigation state - NavigationUIController will check this in its Start()
+    public static bool shouldStartNavigationOnInit = false;
+    public static POI navigationPOI = null;
+
     private VisualElement bodySecond;
     private VisualElement bodyThird;
     private VisualElement getReadyPage;    private VisualElement popUpMsg; // Reference to the PopUpMsg element
@@ -23,6 +27,9 @@ public class MenuController : MonoBehaviour
     // Buttons for navigation
     private Button getStartedButton;
     private Button goBackButtonScan;
+
+    // Store the selected POI when GO button is clicked
+    private POI selectedPOI;
 
     // Mapping between destination list items and POI names
     private Dictionary<int, string> destinationToPOIMapping = new Dictionary<int, string>()
@@ -167,8 +174,8 @@ public class MenuController : MonoBehaviour
 
     private void OnDestinationItemSelected(ClickEvent evt)
     {
-        Debug.Log("Destination item clicked! Transitioning to Get Ready page.");
-        ShowPage(getReadyPage);
+        Debug.Log("Destination item clicked! (Card selection - no action taken)");
+        // Remove automatic transition - only GO button should trigger navigation flow
     }
 
     private void OnDestinationGoButtonClicked(ClickEvent evt, int destinationIndex)
@@ -185,27 +192,11 @@ public class MenuController : MonoBehaviour
             Debug.Log($"Looking for POI: {poiName}");
             if (targetPOI != null)
             {
-                Debug.Log($"Starting navigation to {poiName}");
-                // Start navigation directly using NavigationController
-                if (NavigationController.instance != null)
-                {
-                    NavigationController.instance.SetPOIForNavigation(targetPOI);
-
-                    // Hide main UI and show navigation UI
-                    if (navigationUIControllerObject != null)
-                    {
-                        ui.style.display = DisplayStyle.None;
-                        navigationUIControllerObject.SetActive(true);
-                    }
-                    else
-                    {
-                        Debug.LogError("NavigationUIController not assigned!");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("NavigationController instance not found!");
-                }
+                Debug.Log($"POI '{poiName}' found. Transitioning to Get Ready page.");
+                // Store the selected POI for later use when "Get Started" is clicked
+                selectedPOI = targetPOI;
+                // Transition to Get Ready page instead of starting navigation immediately
+                ShowPage(getReadyPage);
             }
             else
             {
@@ -256,6 +247,7 @@ public class MenuController : MonoBehaviour
         {
             StartCoroutine(AnimateScanner());
         }
+        // Start the scan simulation and navigation with the selected POI
         StartCoroutine(SimulateQRScanAndNavigate());
     }    private IEnumerator AnimateScanner()
     {
@@ -355,33 +347,73 @@ public class MenuController : MonoBehaviour
         // Stop the scanner animation first
         StopAllCoroutines();
         
-        // Check if navigationUIControllerObject is properly assigned
-        if (navigationUIControllerObject != null)
+        // Check if we have a selected POI and navigation controller
+        if (selectedPOI != null && NavigationController.instance != null)
         {
-            Debug.Log("Activating navigation UI controller...");
-            try
+            Debug.Log($"Starting navigation to {selectedPOI.poiName}");
+            
+            // Check if navigationUIControllerObject is properly assigned
+            if (navigationUIControllerObject != null)
             {
-                ui.style.display = DisplayStyle.None; // Hide the main menu
-                navigationUIControllerObject.SetActive(true); // Show the navigation UI
-                Debug.Log("Navigation UI activated successfully.");
+                Debug.Log("Activating navigation UI controller...");
+                try
+                {
+                    // Get the NavigationUIController component
+                    NavigationUIController navUIController = navigationUIControllerObject.GetComponent<NavigationUIController>();
+                    if (navUIController != null)
+                    {
+                        Debug.Log("NavigationUIController component found, setting up shared navigation flags...");
+                        
+                        // Set shared static flags that NavigationUIController will check in its Start()
+                        shouldStartNavigationOnInit = true;
+                        navigationPOI = selectedPOI;
+                        
+                        // Activate the navigation UI object - this will trigger Start() and check our flags
+                        navigationUIControllerObject.SetActive(true);
+                        
+                        Debug.Log($"Navigation flags set for {selectedPOI.poiName} - NavigationUIController will handle it in Start()");
+                    }
+                    else
+                    {
+                        Debug.LogError("NavigationUIController component not found on the assigned GameObject!");
+                        // Fallback: set POI directly on NavigationController
+                        NavigationController.instance.SetPOIForNavigation(selectedPOI);
+                        navigationUIControllerObject.SetActive(true);
+                        Debug.Log($"Navigation initiated directly through NavigationController for {selectedPOI.poiName}");
+                    }
+                    
+                    ui.style.display = DisplayStyle.None; // Hide the main menu
+                    Debug.Log("Navigation UI activated successfully.");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Error activating navigation UI: {e.Message}");
+                    Debug.LogError($"Stack trace: {e.StackTrace}");
+                    // Fallback: stay on scanning page or show error
+                    ShowPage(bodySecond);
+                }
             }
-            catch (System.Exception e)
+            else
             {
-                Debug.LogError($"Error activating navigation UI: {e.Message}");
-                // Fallback: stay on scanning page or show error
+                Debug.LogError("NavigationUIController GameObject is not assigned! Cannot start navigation.");
+                // Fallback: show a message and stay on scanning page
+                if (popUpMsg != null && popUpMsgLabel != null)
+                {
+                    StartCoroutine(ShowPopUpMessageCoroutine("Navigation system not available", 2f));
+                }
+                // Keep the scanning page active instead of going back to destination list
                 ShowPage(bodySecond);
             }
         }
         else
         {
-            Debug.LogError("NavigationUIController GameObject is not assigned! Cannot start navigation.");
-            // Fallback: show a message and stay on scanning page
+            Debug.LogError("No POI selected or NavigationController not found!");
+            // Fallback: show error message and return to destination list
             if (popUpMsg != null && popUpMsgLabel != null)
             {
-                StartCoroutine(ShowPopUpMessageCoroutine("Navigation system not available", 2f));
+                StartCoroutine(ShowPopUpMessageCoroutine("Navigation not available", 2f));
             }
-            // Keep the scanning page active instead of going back to destination list
-            ShowPage(bodySecond);
+            ShowPage(bodyThird);
         }
     }
 
@@ -398,5 +430,13 @@ public class MenuController : MonoBehaviour
         {
             Debug.LogError("PopUpMsg or its label is not assigned. Cannot show message.");
         }
+    }
+
+    // Method to clear navigation flags (can be called by NavigationUIController)
+    public static void ClearNavigationFlags()
+    {
+        shouldStartNavigationOnInit = false;
+        navigationPOI = null;
+        Debug.Log("Navigation flags cleared");
     }
 }
