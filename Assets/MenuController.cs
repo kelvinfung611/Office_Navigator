@@ -46,7 +46,7 @@ public class MenuController : MonoBehaviour
         {7, "Meeting room 4"}, // list-item-7 -> Meeting room 4 POI
         {8, "Meeting room 2"}, // list-item-8 -> Meeting room 2 POI
         {9, "Training room"}, // list-item-9 -> Training room POI
-        {10, "PnC room"}, // list-item-10 -> PnC room POI
+        {10, "Pantry"}, // list-item-10 -> Pantry POI
         {11, "Printing room"}, // list-item-11 -> Printing room POI
         {12, "IT"} // list-item-12 -> Michael IT POI
     };

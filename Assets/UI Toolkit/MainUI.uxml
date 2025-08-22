@@ -68,7 +68,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="list-item-10" class="destination-card">
                     <ui:VisualElement class="destination-card-icon" style="background-color: rgb(0, 132, 255);" />
-                    <ui:Label text="PnC room" class="destination-card-label" />
+                    <ui:Label text="Pantry" class="destination-card-label" />
                     <ui:Button text="GO" class="destination-card-button" />
                 </ui:VisualElement>
                 <ui:VisualElement name="list-item-11" class="destination-card">
