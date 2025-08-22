@@ -38,6 +38,11 @@ ExportedObj/
 *.unityproj
 *.sln
 *.suo
+# Ignore SHINE@ISS*mp4 files under media
+Assets/media/SHINE@ISS*mp4
+
+# Ignore office.zip files at the root
+office.zip
 *.tmp
 *.user
 *.userprefs
@@ -73,3 +78,5 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# specific files
