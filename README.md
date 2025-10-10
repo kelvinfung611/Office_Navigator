@@ -232,12 +232,3 @@ Potential areas for expansion:
 - Integration with calendar systems for meeting reminders
 - Accessibility features (high contrast modes, audio cues)
 
----
-
-## 📄 License
-
-*Add your license information here*
-
----
-
-**Built with ❤️ using Unity and XR Interaction Toolkit**
