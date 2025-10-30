@@ -9,6 +9,15 @@ public class MenuController : MonoBehaviour
 
     [Header("External Controllers")]
     public GameObject navigationUIControllerObject;
+    
+    [Header("QR Code Scanner")]
+    [SerializeField]
+    [Tooltip("Reference to the AndroidCodeReaderToggleableSample component for QR scanning")]
+    private AndroidCodeReaderToggleableSample qrCodeScanner;
+    
+    [SerializeField]
+    [Tooltip("Maximum time to wait for QR code scan in seconds")]
+    private float scanTimeout = 30f;
 
     // Shared navigation state - NavigationUIController will check this in its Start()
     public static bool shouldStartNavigationOnInit = false;
@@ -97,6 +106,12 @@ public class MenuController : MonoBehaviour
         {
             Debug.LogWarning("NavigationUIController GameObject is not assigned in the MenuController Inspector.");
         }
+        
+        // Validate QR code scanner reference
+        if (qrCodeScanner == null)
+        {
+            Debug.LogWarning("AndroidCodeReaderToggleableSample is not assigned in the MenuController Inspector. QR scanning will not work!");
+        }
     }
 
     void Start()
@@ -158,6 +173,9 @@ public class MenuController : MonoBehaviour
                 break;
             }
         }
+        
+        // Ensure scanner is stopped when component is disabled
+        StopScanner();
         
         StopAllCoroutines();
     }
@@ -269,16 +287,34 @@ public class MenuController : MonoBehaviour
         ShowPage(bodySecond);
         Coroutine scannerAnimation = StartCoroutine(AnimateScanner()); // Store reference
 
-        // 2. Simulate QR code scan
-        Debug.Log("Simulating QR code scan for navigation...");
-        yield return new WaitForSeconds(5f);
-        Debug.Log("Scan complete.");
+        // 2. Perform actual QR code scan with timeout
+        Debug.Log("Starting real QR code scan...");
+        bool scanSuccessful = false;
+        string qrResult = "";
+        
+        yield return StartCoroutine(WaitForQRCodeScan((success, result) => {
+            scanSuccessful = success;
+            qrResult = result;
+        }));
+        
+        Debug.Log($"Scan completed. Success: {scanSuccessful}, Result: {qrResult}");
 
         // 3. Stop scanner animation and hide the page
-        if (scannerAnimation != null) StopCoroutine(scannerAnimation); // Stop only the scanner animation
+        if (scannerAnimation != null) StopCoroutine(scannerAnimation);
+        StopScanner(); // Ensure scanner is stopped
         if (bodySecond != null) bodySecond.AddToClassList("hidden");
+        
+        // 4. Handle scan result
+        if (!scanSuccessful)
+        {
+            Debug.LogWarning("QR scan failed or timed out.");
+            StartCoroutine(ShowPopUpMessageCoroutine("QR code scan timed out. Please try again.", 3f));
+            yield return new WaitForSeconds(3f);
+            ReturnToMainMenu();
+            yield break; // Exit the coroutine
+        }
 
-        // 4. Show Localization Prompt
+        // 5. Show Localization Prompt (only if scan was successful)
         if (localizationPrompt != null)
         {
             Debug.Log("Showing localization prompt.");
@@ -290,11 +326,11 @@ public class MenuController : MonoBehaviour
             if (localizationPromptLabel != null)
                 pulseRoutine = StartCoroutine(PulsePromptLabel(localizationPromptLabel));
 
-            // 5. Wait for user to read the prompt (and for animation to play)
+            // 6. Wait for user to read the prompt (and for animation to play)
             Debug.Log("Waiting 3 seconds for prompt display...");
             yield return new WaitForSeconds(3f);
 
-            // 6. Hide Localization Prompt
+            // 7. Hide Localization Prompt
             Debug.Log("Hiding localization prompt.");
             localizationPrompt.RemoveFromClassList("visible"); // This triggers the fade-out
 
@@ -319,7 +355,7 @@ public class MenuController : MonoBehaviour
             Debug.LogError("LocalizationPrompt is null. Skipping prompt.");
         }
 
-        // 7. Proceed with Navigation Setup
+        // 8. Proceed with Navigation Setup
         Debug.Log("Proceeding with navigation setup.");
         if (selectedPOI != null && NavigationController.instance != null)
         {
@@ -440,7 +476,8 @@ public class MenuController : MonoBehaviour
     private void OnGoBackClicked(ClickEvent evt)
     {
         Debug.Log("Go Back button clicked! Returning to destination list.");
-        // Stop any running animations
+        // Stop any running animations and scanner
+        StopScanner();
         StopAllCoroutines();
         ShowPage(bodyThird);
     }
@@ -450,6 +487,10 @@ public class MenuController : MonoBehaviour
         // Public method that can be called by the navigation controller
         // when navigation is complete or cancelled
         Debug.Log("Returning to main menu from navigation...");
+        
+        // Ensure scanner is stopped
+        StopScanner();
+        
         if (navigationUIControllerObject != null)
         {
             navigationUIControllerObject.SetActive(false);
@@ -572,6 +613,69 @@ public class MenuController : MonoBehaviour
             float scale = Mathf.Lerp(1f, 1.05f, t);
             label.transform.scale = new Vector3(scale, scale, 1f);
             yield return null;
+        }
+    }
+    
+    /// <summary>
+    /// Waits for QR code scan with timeout. Polls the scanner for results.
+    /// </summary>
+    /// <param name="onComplete">Callback with (success, qrResult) parameters</param>
+    private IEnumerator WaitForQRCodeScan(System.Action<bool, string> onComplete)
+    {
+        if (qrCodeScanner == null)
+        {
+            Debug.LogError("QR Code Scanner is not assigned!");
+            onComplete?.Invoke(false, "");
+            yield break;
+        }
+        
+        // Enable the scanner
+        Debug.Log("Enabling QR code scanner...");
+        qrCodeScanner.ToggleScanning();
+        
+        float elapsedTime = 0f;
+        string lastResult = "";
+        
+        // Poll for QR code result with timeout
+        while (elapsedTime < scanTimeout)
+        {
+            // Check if we have a result
+            string currentResult = qrCodeScanner.GetLastResult();
+            
+            if (!string.IsNullOrEmpty(currentResult) && currentResult != lastResult)
+            {
+                Debug.Log($"QR Code detected: {currentResult}");
+                lastResult = currentResult;
+                
+                // We got a valid result, return success
+                onComplete?.Invoke(true, currentResult);
+                yield break;
+            }
+            
+            // Wait a bit before polling again (check every 0.1 seconds)
+            yield return new WaitForSeconds(0.1f);
+            elapsedTime += 0.1f;
+        }
+        
+        // Timeout reached
+        Debug.LogWarning($"QR scan timed out after {scanTimeout} seconds.");
+        onComplete?.Invoke(false, "");
+    }
+    
+    /// <summary>
+    /// Safely stops the QR code scanner if it's running
+    /// </summary>
+    private void StopScanner()
+    {
+        if (qrCodeScanner != null)
+        {
+            // Check if scanner is currently running
+            string state = qrCodeScanner.GetCurrentState();
+            if (state.Contains("true")) // Scanner is running
+            {
+                Debug.Log("Stopping QR code scanner...");
+                qrCodeScanner.ToggleScanning(); // Toggle to stop
+            }
         }
     }
 }
