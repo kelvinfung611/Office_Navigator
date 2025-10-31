@@ -189,7 +189,7 @@ The app uses Unity's **Input System** package for cross-platform input:
 - **Scene**: Main scene located at `Assets/Scenes/SampleScene.unity`
 
 ### Requirements:
-- Unity 2021.3 or later (LTS recommended)
+- Unity 6000.0.46f1 or later (LTS recommended)
 - AR Foundation package
 - XR Interaction Toolkit package
 - Input System package (enable in Project Settings)
